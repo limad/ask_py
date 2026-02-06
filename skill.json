@@ -151,7 +151,7 @@
       "locales": {
         "fr-FR": {
           "name": "mon jeedom",
-          "category": "CUSTOM",
+          "category": "SMART_HOME",
           "description": "Skill Ask for AlexaPremium",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
