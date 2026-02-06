@@ -31,10 +31,7 @@
         {
           "eventName": "SKILL_PROACTIVE_SUBSCRIPTION_CHANGED"
         }
-      ],
-      "endpoint": {
-        "sourceDir": "lambda"
-      }
+      ]
     },
     "publishingInformation": {
       "category": "SMART_HOME",
