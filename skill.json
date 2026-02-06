@@ -150,9 +150,9 @@
       "isAvailableWorldwide": true,
       "locales": {
         "fr-FR": {
-          "name": "monjeedom",
+          "name": "mon jeedom",
           "category": "CUSTOM",
-          "description": "Testing Notification",
+          "description": "Skill Ask for AlexaPremium",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
             "Alexa, demande à mon jeedom d'allumer la lumière",
@@ -162,9 +162,9 @@
           "summary": "Contrôle de ma domotique Jeedom via AlexaPremium"
         },
         "fr-CA": {
-          "name": "monjeedom",
+          "name": "mon jeedom",
           "category": "SMART_HOME",
-          "description": "AskPremium",
+          "description": "Skill Ask for AlexaPremium",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
             "Alexa, demande à mon jeedom d'allumer la lumière",
@@ -174,7 +174,7 @@
           "summary": "Contrôle de ma domotique Jeedom via AlexaPremium"
         }
       },
-      "testingInstructions": "Alexa, ouvre monjeedom."
+      "testingInstructions": "Alexa, ouvre mon jeedom."
     }
   }
 }
