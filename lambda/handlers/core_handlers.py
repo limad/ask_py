@@ -1,182 +1,226 @@
 # lambda/handlers/core_handlers.py
-
 import logging
-import json
-from typing import Optional
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_model import Response
-from ask_sdk_model.interfaces.alexa.presentation.apl import (
-    RenderDocumentDirective,
-    ExecuteCommandsDirective,
-)
+from ask_sdk_model.ui import SimpleCard
 
-from utils.jeedom_client import JeedomClient
-from utils.response_builder import build_response, supports_apl, load_apl_document
+from lambda.utils.jeedom_client0 import JeedomClient
+from utils.response_builder import ResponseBuilder
+from utils.jeedom_logger import JeedomLogger
 from config import ENABLE_APL
 from const import RESPONSE_YES, RESPONSE_NO, RESPONSE_NONE
-import prompts
 
 logger = logging.getLogger(__name__)
 
 
 class LaunchRequestHandler(AbstractRequestHandler):
-    """Handler for Skill Launch with APL support."""
+    """Handler for Skill Launch."""
 
     def can_handle(self, handler_input):
         return is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Launch Request triggered")
+        logger.info("Launch Request")
         
-        jeedom = JeedomClient(handler_input)
-        
-        # Get question from Jeedom
-        if not jeedom.get_question():
-            logger.error("Failed to get question from Jeedom")
-            speak_output = jeedom.language_strings.get(
-                prompts.ERROR_CONFIG,
-                "Unable to connect to Jeedom"
+        try:
+            jeedom = JeedomClient(handler_input)
+            
+            # Get initial question from Jeedom
+            if not jeedom.get_question():
+                logger.error("Failed to get question from Jeedom")
+                JeedomLogger.log_error(handler_input, Exception("Launch failed"), "get_question")
+                return ResponseBuilder.error_response(
+                    handler_input,
+                    "ERROR_CONFIG",
+                    "Impossible de se connecter à Jeedom"
+                )
+            
+            speak_output = jeedom.jee_state.text
+            event_id = jeedom.jee_state.event_id
+            
+            # Log successful launch
+            JeedomLogger.log_intent(handler_input, "LaunchRequest", success=True)
+            
+            # Build response with APL support
+            return ResponseBuilder.build(
+                handler_input,
+                speech=speak_output,
+                reprompt=speak_output if event_id else None,
+                card_title="Jeedom",
+                card_text=speak_output,
+                should_end_session=not bool(event_id),
+                apl_document="launch_document.json" if ENABLE_APL else None,
+                apl_data={"text": speak_output, "hasEvent": bool(event_id)}
             )
-            return build_response(handler_input, speak_output)
-        
-        speak_output = jeedom.jee_state.text
-        event_id = jeedom.jee_state.event_id
-        
-        # Build response
-        response_builder = handler_input.response_builder.speak(speak_output)
-        
-        # Keep session open if there's an active event
-        if event_id:
-            response_builder.ask(speak_output)
-        
-        # Add APL if supported
-        if ENABLE_APL and supports_apl(handler_input):
-            try:
-                apl_document = load_apl_document("launch_document.json")
-                if apl_document:
-                    datasources = {
-                        "jeedomData": {
-                            "type": "object",
-                            "properties": {
-                                "text": speak_output,
-                                "hasEvent": bool(event_id),
-                                "logo": "https://your-domain.com/images/jeedom-logo.png",
-                            }
-                        }
-                    }
-                    
-                    response_builder.add_directive(
-                        RenderDocumentDirective(
-                            document=apl_document,
-                            datasources=datasources
-                        )
-                    )
-                    logger.debug("APL document added to response")
-            except Exception as e:
-                logger.warning(f"Failed to add APL: {e}")
-        
-        return response_builder.response
+            
+        except Exception as e:
+            logger.error(f"Launch error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "LaunchRequest")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class YesIntentHandler(AbstractRequestHandler):
-    """Handler for Yes Intent."""
+    """Handler for AMAZON.YesIntent."""
 
     def can_handle(self, handler_input):
         return is_intent_name("AMAZON.YesIntent")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Yes Intent triggered")
+        logger.info("Yes Intent")
         
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(RESPONSE_YES, RESPONSE_YES)
-        return build_response(handler_input, speak_output)
+        try:
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(RESPONSE_YES, RESPONSE_YES)
+            JeedomLogger.log_intent(handler_input, "AMAZON.YesIntent", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
+        except Exception as e:
+            logger.error(f"Yes Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "YesIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class NoIntentHandler(AbstractRequestHandler):
-    """Handler for No Intent."""
+    """Handler for AMAZON.NoIntent."""
 
     def can_handle(self, handler_input):
         return is_intent_name("AMAZON.NoIntent")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("No Intent triggered")
+        logger.info("No Intent")
         
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(RESPONSE_NO, RESPONSE_NO)
-        return build_response(handler_input, speak_output)
+        try:
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(RESPONSE_NO, RESPONSE_NO)
+            JeedomLogger.log_intent(handler_input, "AMAZON.NoIntent", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
+        except Exception as e:
+            logger.error(f"No Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "NoIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class HelpIntentHandler(AbstractRequestHandler):
-    """Handler for Help Intent."""
+    """Handler for AMAZON.HelpIntent."""
 
     def can_handle(self, handler_input):
         return is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Help Intent triggered")
+        logger.info("Help Intent")
         
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
-        speak_output = data.get(prompts.HELP_MESSAGE, "How can I help you?")
-        
-        return build_response(handler_input, speak_output, should_end_session=False)
+        try:
+            speak_output = ResponseBuilder.get_text(handler_input, "HELP_MESSAGE")
+            reprompt = ResponseBuilder.get_text(handler_input, "HELP_REPROMPT")
+            
+            JeedomLogger.log_intent(handler_input, "AMAZON.HelpIntent", success=True)
+            
+            return ResponseBuilder.build(
+                handler_input,
+                speech=speak_output,
+                reprompt=reprompt,
+                card_title="Aide Jeedom",
+                card_text=speak_output,
+                should_end_session=False
+            )
+            
+        except Exception as e:
+            logger.error(f"Help Intent error: {e}", exc_info=True)
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
-    """Handler for Cancel and Stop Intent."""
+    """Handler for AMAZON.CancelIntent and AMAZON.StopIntent."""
 
     def can_handle(self, handler_input):
         return (is_intent_name("AMAZON.CancelIntent")(handler_input) or
                 is_intent_name("AMAZON.StopIntent")(handler_input))
 
     def handle(self, handler_input) -> Response:
-        logger.info("Cancel/Stop Intent triggered")
+        logger.info("Cancel/Stop Intent")
         
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
-        speak_output = data.get(prompts.STOP_MESSAGE, "Goodbye")
-        
-        return build_response(handler_input, speak_output, should_end_session=True)
+        try:
+            speak_output = ResponseBuilder.get_text(handler_input, "STOP_MESSAGE")
+            
+            JeedomLogger.log_intent(handler_input, "AMAZON.StopIntent", success=True)
+            
+            return ResponseBuilder.build(
+                handler_input,
+                speech=speak_output,
+                should_end_session=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Stop Intent error: {e}", exc_info=True)
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class FallbackHandler(AbstractRequestHandler):
-    """Handler for Fallback Intent."""
+    """Handler for AMAZON.FallbackIntent."""
 
     def can_handle(self, handler_input):
         return is_intent_name("AMAZON.FallbackIntent")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Fallback triggered")
+        logger.info("Fallback Intent")
         
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        jeedom.post_event(RESPONSE_NONE, RESPONSE_NONE)
-        
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
-        speak_output = data.get(prompts.FALLBACK_MESSAGE, "I didn't understand")
-        
-        return build_response(handler_input, speak_output, should_end_session=True)
+        try:
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            jeedom.post_event(RESPONSE_NONE, RESPONSE_NONE)
+            
+            speak_output = ResponseBuilder.get_text(handler_input, "FALLBACK_MESSAGE")
+            reprompt = ResponseBuilder.get_text(handler_input, "FALLBACK_REPROMPT")
+            
+            JeedomLogger.log_intent(handler_input, "AMAZON.FallbackIntent", success=False)
+            
+            return ResponseBuilder.build(
+                handler_input,
+                speech=speak_output,
+                reprompt=reprompt,
+                should_end_session=False
+            )
+            
+        except Exception as e:
+            logger.error(f"Fallback error: {e}", exc_info=True)
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
-    """Handler for Session End."""
+    """Handler for SessionEndedRequest."""
 
     def can_handle(self, handler_input):
         return is_request_type("SessionEndedRequest")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Session Ended")
-        
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        from ask_sdk_model import SessionEndedReason
         reason = handler_input.request_envelope.request.reason
+        logger.info(f"Session ended: {reason}")
         
-        if reason in (SessionEndedReason.EXCEEDED_MAX_REPROMPTS, SessionEndedReason.USER_INITIATED):
-            jeedom.post_event(RESPONSE_NONE, RESPONSE_NONE)
+        try:
+            from ask_sdk_model import SessionEndedReason
+            
+            # Only post RESPONSE_NONE for certain end reasons
+            if reason in (SessionEndedReason.EXCEEDED_MAX_REPROMPTS, 
+                         SessionEndedReason.USER_INITIATED):
+                jeedom = JeedomClient(handler_input)
+                jeedom.get_question()
+                jeedom.post_event(RESPONSE_NONE, RESPONSE_NONE)
+            
+            JeedomLogger.log_to_jeedom(
+                f"Session ended: {reason}",
+                level="info",
+                user_id=handler_input.request_envelope.session.user.user_id
+            )
+            
+        except Exception as e:
+            logger.error(f"Session end error: {e}", exc_info=True)
         
         return handler_input.response_builder.response

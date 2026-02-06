@@ -1,3 +1,4 @@
+
 # lambda/const.py
 
 # Response Types
@@ -13,6 +14,10 @@ RESPONSE_DEVICE_CONTROL = "ResponseDeviceControl"
 RESPONSE_STATUS_QUERY = "ResponseStatusQuery"
 RESPONSE_SET_VALUE = "ResponseSetValue"
 RESPONSE_SCENARIO = "ResponseScenario"
+
+# LWA Token Storage Key
+LWA_TOKEN_KEY = "lwa_access_token"
+LWA_TOKEN_EXPIRY_KEY = "lwa_token_expiry"
 
 # Entity Names
 INPUT_TEXT_ENTITY = "input_text.alexa_actionable_notification"

@@ -1,15 +1,16 @@
 # lambda/handlers/data_handlers.py
-
 import logging
 import json
 import isodate
+from datetime import datetime
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.utils import is_intent_name, get_slot_value, get_slot
 from ask_sdk_model import Response
 from ask_sdk_model.slu.entityresolution import StatusCode
 
-from utils.jeedom_client import JeedomClient
-from utils.response_builder import build_response
+from lambda.utils.jeedom_client0 import JeedomClient
+from utils.response_builder import ResponseBuilder
+from utils.jeedom_logger import JeedomLogger
 from const import (
     RESPONSE_NUMERIC,
     RESPONSE_STRING,
@@ -17,57 +18,76 @@ from const import (
     RESPONSE_DURATION,
     RESPONSE_DATE_TIME,
 )
-import prompts
 
 logger = logging.getLogger(__name__)
 
 
 class NumericIntentHandler(AbstractRequestHandler):
-    """Handler for numeric responses."""
+    """Handler for numeric input."""
 
     def can_handle(self, handler_input):
         return is_intent_name("Number")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Number Intent triggered")
+        logger.info("Number Intent")
         
-        number = get_slot_value(handler_input, "Numbers")
-        logger.debug(f"Number: {number}")
-        
-        if not number or number == "?":
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            speak_output = data.get(prompts.ERROR_NO_NUMBER, "Je n'ai pas compris le nombre")
-            return build_response(handler_input, speak_output, should_end_session=False)
-        
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(number, RESPONSE_NUMERIC)
-        return build_response(handler_input, speak_output)
+        try:
+            number = get_slot_value(handler_input, "Numbers")
+            logger.debug(f"Number: {number}")
+            
+            if not number or number == "?":
+                return ResponseBuilder.build(
+                    handler_input,
+                    speech=ResponseBuilder.get_text(handler_input, "ERROR_NO_NUMBER"),
+                    should_end_session=False
+                )
+            
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(number, RESPONSE_NUMERIC)
+            JeedomLogger.log_intent(handler_input, "Number", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
+        except Exception as e:
+            logger.error(f"Number Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "NumericIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class StringIntentHandler(AbstractRequestHandler):
-    """Handler for string/text responses."""
+    """Handler for string/text input."""
 
     def can_handle(self, handler_input):
         return is_intent_name("String")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("String Intent triggered")
+        logger.info("String Intent")
         
-        string = get_slot_value(handler_input, "Strings")
-        logger.debug(f"String: {string}")
-        
-        if not string:
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            speak_output = data.get(prompts.ERROR_NO_STRING, "Je n'ai pas entendu de texte")
-            return build_response(handler_input, speak_output, should_end_session=False)
-        
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(string, RESPONSE_STRING)
-        return build_response(handler_input, speak_output)
+        try:
+            string = get_slot_value(handler_input, "Strings")
+            logger.debug(f"String: {string}")
+            
+            if not string:
+                return ResponseBuilder.build(
+                    handler_input,
+                    speech=ResponseBuilder.get_text(handler_input, "ERROR_NO_STRING"),
+                    should_end_session=False
+                )
+            
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(string, RESPONSE_STRING)
+            JeedomLogger.log_intent(handler_input, "String", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
+        except Exception as e:
+            logger.error(f"String Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "StringIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class SelectIntentHandler(AbstractRequestHandler):
@@ -77,73 +97,108 @@ class SelectIntentHandler(AbstractRequestHandler):
         return is_intent_name("Select")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Select Intent triggered")
+        logger.info("Select Intent")
         
-        # Get resolved value from slot
-        selection = self._get_resolved_value(handler_input, "Selections")
-        logger.debug(f"Selection: {selection}")
-        
-        if not selection:
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            speak_output = data.get(prompts.ERROR_NO_SELECTION, "Je n'ai pas compris votre choix")
-            return build_response(handler_input, speak_output, should_end_session=False)
-        
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(selection, RESPONSE_SELECT)
-        
-        if not speak_output or speak_output == "OK":
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            template = data.get(prompts.SELECTED, "{selection} sélectionné")
-            speak_output = template.format(selection=selection)
-        
-        return build_response(handler_input, speak_output)
+        try:
+            selection = self._get_resolved_value(handler_input, "Selections")
+            logger.debug(f"Selection: {selection}")
+            
+            if not selection:
+                return ResponseBuilder.build(
+                    handler_input,
+                    speech=ResponseBuilder.get_text(handler_input, "ERROR_NO_SELECTION"),
+                    should_end_session=False
+                )
+            
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(selection, RESPONSE_SELECT)
+            
+            # Provide fallback response
+            if not speak_output or speak_output == "OK":
+                template = ResponseBuilder.get_text(handler_input, "SELECTED")
+                speak_output = template.format(selection=selection)
+            
+            JeedomLogger.log_intent(handler_input, "Select", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
+        except Exception as e:
+            logger.error(f"Select Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "SelectIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
     @staticmethod
     def _get_resolved_value(handler_input, slot_name: str) -> str:
         """Get resolved value from slot entity resolution."""
-        slot = get_slot(handler_input, slot_name)
-        if slot and slot.resolutions and slot.resolutions.resolutions_per_authority:
-            for resolution in slot.resolutions.resolutions_per_authority:
-                if resolution.status.code == StatusCode.ER_SUCCESS_MATCH:
-                    for value in resolution.values:
-                        if value.value and value.value.name:
-                            return value.value.name
-        return get_slot_value(handler_input, slot_name)
+        try:
+            slot = get_slot(handler_input, slot_name)
+            if not slot:
+                return ""
+            
+            # Try entity resolution first
+            if slot.resolutions and slot.resolutions.resolutions_per_authority:
+                for resolution in slot.resolutions.resolutions_per_authority:
+                    if resolution.status.code == StatusCode.ER_SUCCESS_MATCH:
+                        if resolution.values:
+                            value = resolution.values[0].value
+                            if value and value.name:
+                                return value.name
+            
+            # Fallback to slot value
+            return get_slot_value(handler_input, slot_name) or ""
+            
+        except Exception as e:
+            logger.error(f"Error resolving slot value: {e}")
+            return get_slot_value(handler_input, slot_name) or ""
 
 
 class DurationIntentHandler(AbstractRequestHandler):
-    """Handler for duration values."""
+    """Handler for duration values (ISO 8601)."""
 
     def can_handle(self, handler_input):
         return is_intent_name("Duration")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("Duration Intent triggered")
-        
-        duration = get_slot_value(handler_input, "Durations")
-        logger.debug(f"Duration: {duration}")
-        
-        if not duration:
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            speak_output = data.get(prompts.ERROR_NO_DURATION, "Je n'ai pas compris la durée")
-            return build_response(handler_input, speak_output, should_end_session=False)
+        logger.info("Duration Intent")
         
         try:
-            # Parse ISO 8601 duration to seconds
-            duration_seconds = isodate.parse_duration(duration).total_seconds()
+            duration = get_slot_value(handler_input, "Durations")
+            logger.debug(f"Duration: {duration}")
+            
+            if not duration:
+                return ResponseBuilder.build(
+                    handler_input,
+                    speech=ResponseBuilder.get_text(handler_input, "ERROR_NO_DURATION"),
+                    should_end_session=False
+                )
+            
+            # Parse ISO 8601 duration
+            try:
+                duration_obj = isodate.parse_duration(duration)
+                duration_seconds = int(duration_obj.total_seconds())
+                logger.debug(f"Parsed duration: {duration_seconds} seconds")
+            except Exception as parse_error:
+                logger.error(f"Duration parse error: {parse_error}")
+                return ResponseBuilder.build(
+                    handler_input,
+                    speech=ResponseBuilder.get_text(handler_input, "ERROR_INVALID_DURATION"),
+                    should_end_session=False
+                )
+            
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(str(duration_seconds), RESPONSE_DURATION)
+            JeedomLogger.log_intent(handler_input, "Duration", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
         except Exception as e:
-            logger.error(f"Failed to parse duration: {e}")
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            speak_output = data.get(prompts.ERROR_INVALID_DURATION, "Durée invalide")
-            return build_response(handler_input, speak_output, should_end_session=False)
-        
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(str(duration_seconds), RESPONSE_DURATION)
-        return build_response(handler_input, speak_output)
+            logger.error(f"Duration Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "DurationIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
 
 class DateTimeIntentHandler(AbstractRequestHandler):
@@ -153,81 +208,103 @@ class DateTimeIntentHandler(AbstractRequestHandler):
         return is_intent_name("Date")(handler_input)
 
     def handle(self, handler_input) -> Response:
-        logger.info("DateTime Intent triggered")
+        logger.info("DateTime Intent")
         
-        date = get_slot_value(handler_input, "Dates")
-        time = get_slot_value(handler_input, "Times")
-        
-        logger.debug(f"Date: {date}, Time: {time}")
-        
-        if not date and not time:
-            data = handler_input.attributes_manager.request_attributes.get("_", {})
-            speak_output = data.get(prompts.ERROR_NO_DATETIME, "Je n'ai pas compris la date ou l'heure")
-            return build_response(handler_input, speak_output, should_end_session=False)
-        
-        # Parse date and time
-        date_data = self._parse_date(date)
-        time_data = self._parse_time(time)
-        
-        datetime_data = {**date_data, **time_data}
-        
-        jeedom = JeedomClient(handler_input)
-        jeedom.get_question()
-        
-        speak_output = jeedom.post_event(
-            json.dumps(datetime_data),
-            RESPONSE_DATE_TIME
-        )
-        
-        return build_response(handler_input, speak_output)
+        try:
+            date = get_slot_value(handler_input, "Dates")
+            time = get_slot_value(handler_input, "Times")
+            
+            logger.debug(f"Date: {date}, Time: {time}")
+            
+            if not date and not time:
+                return ResponseBuilder.build(
+                    handler_input,
+                    speech=ResponseBuilder.get_text(handler_input, "ERROR_NO_DATETIME"),
+                    should_end_session=False
+                )
+            
+            # Parse date and time into structured format
+            datetime_data = {
+                **self._parse_date(date),
+                **self._parse_time(time),
+                "raw_date": date,
+                "raw_time": time,
+            }
+            
+            logger.debug(f"Parsed datetime: {datetime_data}")
+            
+            jeedom = JeedomClient(handler_input)
+            jeedom.get_question()
+            
+            speak_output = jeedom.post_event(
+                json.dumps(datetime_data),
+                RESPONSE_DATE_TIME
+            )
+            
+            JeedomLogger.log_intent(handler_input, "Date", success=True)
+            
+            return ResponseBuilder.build(handler_input, speech=speak_output)
+            
+        except Exception as e:
+            logger.error(f"DateTime Intent error: {e}", exc_info=True)
+            JeedomLogger.log_error(handler_input, e, "DateTimeIntent")
+            return ResponseBuilder.error_response(handler_input, "ERROR_GENERAL")
 
     @staticmethod
-    def _parse_date(date: str) -> dict:
-        """Parse date string to components."""
-        date_data = {
-            "day": None,
-            "month": None,
-            "year": None,
-        }
+    def _parse_date(date_str: str) -> dict:
+        """
+        Parse date string to components.
+        Supports: YYYY-MM-DD, YYYY-MM, YYYY
+        """
+        result = {"day": None, "month": None, "year": None}
         
-        if not date:
-            return date_data
+        if not date_str:
+            return result
         
-        parts = date.split("-")
-        date_data["year"] = parts[0] if len(parts) >= 1 else None
-        date_data["month"] = parts[1] if len(parts) >= 2 else None
-        date_data["day"] = parts[2] if len(parts) >= 3 else None
+        try:
+            parts = date_str.split("-")
+            if len(parts) >= 1:
+                result["year"] = int(parts[0])
+            if len(parts) >= 2:
+                result["month"] = int(parts[1])
+            if len(parts) >= 3:
+                result["day"] = int(parts[2])
+        except (ValueError, IndexError) as e:
+            logger.warning(f"Date parse error: {e}")
         
-        return date_data
+        return result
 
     @staticmethod
-    def _parse_time(time: str) -> dict:
-        """Parse time string to components."""
-        time_data = {
-            "hour": None,
-            "minute": None,
-            "seconds": None,
-        }
+    def _parse_time(time_str: str) -> dict:
+        """
+        Parse time string to components.
+        Supports: HH:MM:SS, HH:MM, special formats (10H, 30M, 15S)
+        """
+        result = {"hour": None, "minute": None, "second": None}
         
-        if not time:
-            return time_data
+        if not time_str:
+            return result
         
-        # Handle special formats (e.g., "10H", "30M", "15S")
-        time_lower = time.lower()
-        if "s" in time_lower:
-            time_data["seconds"] = time_lower.replace("s", "")
-            return time_data
-        if "m" in time_lower:
-            time_data["minute"] = time_lower.replace("m", "")
-            return time_data
-        if "h" in time_lower:
-            time_data["hour"] = time_lower.replace("h", "")
-            return time_data
+        try:
+            time_lower = time_str.lower()
+            
+            # Handle special single-unit formats
+            if time_lower.endswith("s"):
+                result["second"] = int(time_lower[:-1])
+            elif time_lower.endswith("m"):
+                result["minute"] = int(time_lower[:-1])
+            elif time_lower.endswith("h"):
+                result["hour"] = int(time_lower[:-1])
+            else:
+                # Standard format HH:MM:SS
+                parts = time_str.split(":")
+                if len(parts) >= 1:
+                    result["hour"] = int(parts[0])
+                if len(parts) >= 2:
+                    result["minute"] = int(parts[1])
+                if len(parts) >= 3:
+                    result["second"] = int(parts[2])
+        except (ValueError, IndexError) as e:
+            logger.warning(f"Time parse error: {e}")
         
-        # Parse standard format (HH:MM:SS)
-        parts = time.split(":")
-        time_data["hour"] = parts[0] if len(parts) >= 1 else None
-        time_data["minute"] = parts[1] if len(parts) >= 2 else None
-        time_data["seconds"] = parts[2] if len(parts) >= 3 else None
-        
-        return time_data
+        return result

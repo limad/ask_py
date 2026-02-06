@@ -9,9 +9,7 @@
     }
   ],
   "mainTemplate": {
-    "parameters": [
-      "jeedomData"
-    ],
+    "parameters": ["jeedomData"],
     "items": [
       {
         "type": "Container",
@@ -53,9 +51,7 @@
                 "buttonText": "Oui",
                 "primaryAction": {
                   "type": "SendEvent",
-                  "arguments": [
-                    "yes"
-                  ]
+                  "arguments": ["yes"]
                 },
                 "buttonStyle": "contained",
                 "colorTheme": "primary",
@@ -71,9 +67,7 @@
                 "buttonText": "Non",
                 "primaryAction": {
                   "type": "SendEvent",
-                  "arguments": [
-                    "no"
-                  ]
+                  "arguments": ["no"]
                 },
                 "buttonStyle": "contained",
                 "colorTheme": "secondary",

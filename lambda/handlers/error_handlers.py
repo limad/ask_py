@@ -1,13 +1,12 @@
 # lambda/handlers/error_handlers.py
-
 import logging
+from typing import Optional
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_model import Response
 
-from utils.jeedom_client import JeedomClient
-from utils.response_builder import build_response
-from schemas import QuestionStateError
-import prompts
+from lambda.utils.jeedom_client0 import JeedomClient
+from utils.response_builder import ResponseBuilder
+from utils.jeedom_logger import JeedomLogger
 
 logger = logging.getLogger(__name__)
 
@@ -21,31 +20,21 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
     def handle(self, handler_input, exception) -> Response:
         """Handle exceptions with proper logging and user feedback."""
-        logger.error(f"Exception caught: {type(exception).__name__}", exc_info=True)
-        logger.error(f"Exception details: {str(exception)}")
+        exception_type = type(exception).__name__
+        exception_msg = str(exception)
         
-        # Initialize Jeedom client
-        try:
-            jeedom = JeedomClient(handler_input)
-        except Exception as e:
-            logger.error(f"Failed to initialize Jeedom client in exception handler: {e}")
-            jeedom = None
-        
-        # Get language strings
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
-        
-        # Determine appropriate error message
-        speak_output = self._get_error_message(exception, jeedom, data)
+        logger.error(f"Exception: {exception_type}", exc_info=True)
+        logger.error(f"Details: {exception_msg}")
         
         # Log to Jeedom
-        if jeedom:
-            try:
-                error_log = f"Exception: {type(exception).__name__} - {str(exception)}"
-                jeedom.post_log(error_log)
-            except Exception as log_error:
-                logger.error(f"Failed to log exception to Jeedom: {log_error}")
+        try:
+            JeedomLogger.log_error(handler_input, exception, "Global Exception Handler")
+        except Exception as log_error:
+            logger.error(f"Failed to log to Jeedom: {log_error}")
         
-        # Build response
+        # Try to get Jeedom state for custom error message
+        speak_output = self._get_error_message(handler_input, exception)
+        
         return (
             handler_input.response_builder
             .speak(speak_output)
@@ -53,66 +42,140 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
             .response
         )
 
-    def _get_error_message(self, exception, jeedom, data: dict) -> str:
+    def _get_error_message(self, handler_input, exception) -> str:
         """
-        Determine appropriate error message based on exception type and state.
+        Get appropriate error message based on exception type.
         
         Args:
+            handler_input: Handler input
             exception: The caught exception
-            jeedom: JeedomClient instance or None
-            data: Language strings dictionary
             
         Returns:
             Error message to speak
         """
-        # If Jeedom has state with text, use it
-        if jeedom and jeedom.jee_state:
-            if isinstance(jeedom.jee_state, QuestionStateError):
-                return jeedom.jee_state.text
-            elif hasattr(jeedom.jee_state, 'text') and jeedom.jee_state.text:
-                return jeedom.jee_state.text
-        
-        # Check for specific exception types
         exception_type = type(exception).__name__
         
-        # Network-related errors
-        if exception_type in ('HTTPError', 'TimeoutError', 'MaxRetryError', 'URLError'):
-            return data.get(prompts.ERROR_NETWORK, "Erreur de connexion au réseau")
+        # Try to get custom error from Jeedom state
+        try:
+            jeedom = JeedomClient(handler_input)
+            if jeedom.jee_state and hasattr(jeedom.jee_state, 'text'):
+                if jeedom.jee_state.text:
+                    return jeedom.jee_state.text
+        except Exception as e:
+            logger.debug(f"Could not get Jeedom state: {e}")
         
-        # Authentication errors
-        if exception_type in ('AuthenticationError', 'PermissionError'):
-            return data.get(prompts.ERROR_401, "Erreur d'authentification")
+        # Map exception types to error message keys
+        error_map = {
+            # Network errors
+            'HTTPError': 'ERROR_NETWORK',
+            'TimeoutError': 'ERROR_TIMEOUT',
+            'MaxRetryError': 'ERROR_NETWORK',
+            'URLError': 'ERROR_NETWORK',
+            'ConnectionError': 'ERROR_NETWORK',
+            
+            # Authentication errors
+            'AuthenticationError': 'ERROR_401',
+            'PermissionError': 'ERROR_403',
+            'Unauthorized': 'ERROR_401',
+            
+            # Data errors
+            'JSONDecodeError': 'ERROR_PARSE',
+            'ValueError': 'ERROR_INVALID_VALUE',
+            'KeyError': 'ERROR_MISSING_DATA',
+            'TypeError': 'ERROR_INVALID_TYPE',
+            
+            # Intent/slot errors
+            'SlotValueError': 'ERROR_ACOUSTIC',
+            'IntentError': 'ERROR_ACOUSTIC',
+        }
         
-        # Parsing/data errors
-        if exception_type in ('JSONDecodeError', 'ValueError', 'KeyError'):
-            return data.get(prompts.ERROR_PARSE, "Erreur de traitement des données")
+        error_key = error_map.get(exception_type, 'ERROR_GENERAL')
         
-        # Slot/intent errors
-        if 'slot' in str(exception).lower() or 'intent' in str(exception).lower():
-            return data.get(prompts.ERROR_ACOUSTIC, "Je n'ai pas bien compris votre demande")
-        
-        # Generic error
-        return data.get(prompts.ERROR_GENERAL, "Une erreur s'est produite")
+        return ResponseBuilder.get_text(handler_input, error_key)
 
 
-class SpecificExceptionHandler(AbstractExceptionHandler):
-    """Handler for specific known exceptions."""
+class NetworkExceptionHandler(AbstractExceptionHandler):
+    """Handler for network-related exceptions."""
 
     def can_handle(self, handler_input, exception):
-        """Handle specific exception types."""
-        return isinstance(exception, (ValueError, KeyError, AttributeError))
+        """Handle network exceptions."""
+        exception_type = type(exception).__name__
+        return exception_type in (
+            'HTTPError',
+            'TimeoutError',
+            'MaxRetryError',
+            'URLError',
+            'ConnectionError',
+            'ConnectTimeout',
+            'ReadTimeout',
+        )
 
     def handle(self, handler_input, exception) -> Response:
-        """Handle specific exceptions with targeted messages."""
-        logger.warning(f"Specific exception: {type(exception).__name__} - {str(exception)}")
+        """Handle network errors."""
+        logger.error(f"Network error: {exception}", exc_info=True)
         
-        data = handler_input.attributes_manager.request_attributes.get("_", {})
+        JeedomLogger.log_error(handler_input, exception, "Network Error")
         
-        if isinstance(exception, ValueError):
-            speak_output = data.get(prompts.ERROR_INVALID_VALUE, "Valeur invalide")
-        elif isinstance(exception, KeyError):
-            speak_output = data.get(prompts.ERROR_MISSING_DATA, "Données manquantes")
-        else:  # AttributeError
-            speak_output = data.get(prompts.ERROR_CONFIG, "Erreur de configuration")
+        speak_output = ResponseBuilder.get_text(handler_input, "ERROR_NETWORK")
+        reprompt = ResponseBuilder.get_text(handler_input, "ERROR_NETWORK_REPROMPT")
         
-        return build_response(handler_input, speak_output, should_end_session=True)
+        return ResponseBuilder.build(
+            handler_input,
+            speech=speak_output,
+            reprompt=reprompt,
+            should_end_session=True
+        )
+
+
+class ValidationExceptionHandler(AbstractExceptionHandler):
+    """Handler for validation and data errors."""
+
+    def can_handle(self, handler_input, exception):
+        """Handle validation exceptions."""
+        return isinstance(exception, (ValueError, KeyError, AttributeError, TypeError))
+
+    def handle(self, handler_input, exception) -> Response:
+        """Handle validation errors."""
+        logger.warning(f"Validation error: {exception}", exc_info=True)
+        
+        JeedomLogger.log_error(handler_input, exception, "Validation Error")
+        
+        # Map exception type to message
+        error_messages = {
+            ValueError: "ERROR_INVALID_VALUE",
+            KeyError: "ERROR_MISSING_DATA",
+            AttributeError: "ERROR_CONFIG",
+            TypeError: "ERROR_INVALID_TYPE",
+        }
+        
+        error_key = error_messages.get(type(exception), "ERROR_GENERAL")
+        speak_output = ResponseBuilder.get_text(handler_input, error_key)
+        
+        return ResponseBuilder.build(
+            handler_input,
+            speech=speak_output,
+            should_end_session=False
+        )
+
+
+class JeedomExceptionHandler(AbstractExceptionHandler):
+    """Handler for Jeedom-specific exceptions."""
+
+    def can_handle(self, handler_input, exception):
+        """Handle Jeedom exceptions."""
+        exception_name = type(exception).__name__
+        return 'jeedom' in exception_name.lower() or 'question' in exception_name.lower()
+
+    def handle(self, handler_input, exception) -> Response:
+        """Handle Jeedom errors."""
+        logger.error(f"Jeedom error: {exception}", exc_info=True)
+        
+        JeedomLogger.log_error(handler_input, exception, "Jeedom Communication Error")
+        
+        speak_output = ResponseBuilder.get_text(handler_input, "ERROR_JEEDOM")
+        
+        return ResponseBuilder.build(
+            handler_input,
+            speech=speak_output,
+            should_end_session=True
+        )
