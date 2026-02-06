@@ -1,0 +1,66 @@
+{
+  "fr": {
+    "OKAY": "D'accord",
+    "SELECTED": "{selection} sélectionné",
+    "DEVICE_CONTROL_SUCCESS": "{action} {device} effectué",
+    "SET_VALUE_SUCCESS": "{device} réglé à {value}",
+    "SCENARIO_ACTIVATED": "Scénario {scenario} activé",
+    
+    "HELP_MESSAGE": "Vous pouvez me demander de contrôler vos appareils, d'activer des scénarios, ou de répondre à des questions. Par exemple : allume la lumière du salon, ou active le mode nuit. Comment puis-je vous aider ?",
+    "STOP_MESSAGE": "À bientôt !",
+    "FALLBACK_MESSAGE": "Désolé, je n'ai pas compris. Pouvez-vous reformuler ?",
+    
+    "ERROR_GENERAL": "Une erreur s'est produite",
+    "ERROR_CONFIG": "Erreur de configuration. Vérifiez les paramètres de Jeedom",
+    "ERROR_NETWORK": "Impossible de se connecter à Jeedom. Vérifiez votre connexion réseau",
+    "ERROR_PARSE": "Erreur lors du traitement des données",
+    "ERROR_ACOUSTIC": "Je n'ai pas bien compris votre demande. Pouvez-vous répéter ?",
+    "ERROR_401": "Erreur d'authentification. Vérifiez vos identifiants",
+    "ERROR_404": "Ressource non trouvée",
+    "ERROR_400": "Erreur de requête",
+    
+    "ERROR_MISSING_SLOTS": "Je n'ai pas compris tous les éléments. Pouvez-vous préciser ?",
+    "ERROR_MISSING_SCENARIO": "Quel scénario voulez-vous activer ?",
+    "ERROR_INVALID_VALUE": "La valeur fournie n'est pas valide",
+    "ERROR_MISSING_DATA": "Des informations sont manquantes",
+    
+    "ERROR_NO_NUMBER": "Je n'ai pas compris le nombre",
+    "ERROR_NO_STRING": "Je n'ai pas entendu de texte",
+    "ERROR_NO_SELECTION": "Je n'ai pas compris votre choix",
+    "ERROR_NO_DURATION": "Je n'ai pas compris la durée",
+    "ERROR_INVALID_DURATION": "La durée fournie n'est pas valide",
+    "ERROR_NO_DATETIME": "Je n'ai pas compris la date ou l'heure"
+  },
+  "en": {
+    "OKAY": "Okay",
+    "SELECTED": "{selection} selected",
+    "DEVICE_CONTROL_SUCCESS": "{action} {device} done",
+    "SET_VALUE_SUCCESS": "{device} set to {value}",
+    "SCENARIO_ACTIVATED": "Scenario {scenario} activated",
+    
+    "HELP_MESSAGE": "You can ask me to control your devices, activate scenarios, or answer questions. For example: turn on the living room light, or activate night mode. How can I help you?",
+    "STOP_MESSAGE": "Goodbye!",
+    "FALLBACK_MESSAGE": "Sorry, I didn't understand. Can you rephrase?",
+    
+    "ERROR_GENERAL": "An error occurred",
+    "ERROR_CONFIG": "Configuration error. Check your Jeedom settings",
+    "ERROR_NETWORK": "Unable to connect to Jeedom. Check your network connection",
+    "ERROR_PARSE": "Error processing data",
+    "ERROR_ACOUSTIC": "I didn't understand your request. Can you repeat?",
+    "ERROR_401": "Authentication error. Check your credentials",
+    "ERROR_404": "Resource not found",
+    "ERROR_400": "Request error",
+    
+    "ERROR_MISSING_SLOTS": "I didn't understand all the elements. Can you clarify?",
+    "ERROR_MISSING_SCENARIO": "Which scenario do you want to activate?",
+    "ERROR_INVALID_VALUE": "The provided value is not valid",
+    "ERROR_MISSING_DATA": "Information is missing",
+    
+    "ERROR_NO_NUMBER": "I didn't understand the number",
+    "ERROR_NO_STRING": "I didn't hear any text",
+    "ERROR_NO_SELECTION": "I didn't understand your choice",
+    "ERROR_NO_DURATION": "I didn't understand the duration",
+    "ERROR_INVALID_DURATION": "The provided duration is not valid",
+    "ERROR_NO_DATETIME": "I didn't understand the date or time"
+  }
+}
