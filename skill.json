@@ -147,11 +147,11 @@
     },
     "publishingInformation": {
       "distributionCountries": [],
+      "category": "SMART_HOME",
       "isAvailableWorldwide": true,
       "locales": {
         "fr-FR": {
           "name": "mon jeedom",
-          "category": "SMART_HOME",
           "description": "Skill Ask for AlexaPremium",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
@@ -163,7 +163,6 @@
         },
         "fr-CA": {
           "name": "mon jeedom",
-          "category": "SMART_HOME",
           "description": "Skill Ask for AlexaPremium",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
