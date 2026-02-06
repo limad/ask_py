@@ -123,10 +123,7 @@
       {
         "name": "alexa::alerts:timers:skill:readwrite"
       },
-      {
-        "name": "alexa::devices:app:push_notifications"
-      },
-      {
+     {
         "name": "alexa::devices:all:notifications:write"
       }
     ],
@@ -142,7 +139,7 @@
         }
       ],
       "endpoint": {
-        "uri": "arn:aws:lambda:eu-west-1:571600828883:function:beda06b4-f562-4c0d-8790-cd8c9dd0ffe8:Release_0"
+        "uri": "arn:aws:lambda:eu-west-1::YOUR_LAMBDA_ARN"
       }
     },
     "publishingInformation": {
