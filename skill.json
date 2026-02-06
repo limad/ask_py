@@ -3,26 +3,14 @@
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "arn:aws:lambda:eu-west-1:571600828883:function:beda06b4-f562-4c0d-8790-cd8c9dd0ffe8:Release_0"
+          "sourceDir": "lambda"
         },
-        "locales": {},
-        "regions": {
-          "NA": {
-            "endpoint": {
-              "uri": "arn:aws:lambda:us-east-1:571600828883:function:beda06b4-f562-4c0d-8790-cd8c9dd0ffe8:Release_0"
-            }
-          },
-          "EU": {
-            "endpoint": {
-              "uri": "arn:aws:lambda:eu-west-1:571600828883:function:beda06b4-f562-4c0d-8790-cd8c9dd0ffe8:Release_0"
-            }
-          },
-          "FE": {
-            "endpoint": {
-              "uri": "arn:aws:lambda:us-west-2:571600828883:function:beda06b4-f562-4c0d-8790-cd8c9dd0ffe8:Release_0"
-            }
+        "interfaces": [
+          {
+            "type": "ALEXA_PRESENTATION_APL"
           }
-        }
+        ],
+        "locales": {}
       }
     },
     "manifestVersion": "1.0",
@@ -49,38 +37,54 @@
         }
       ],
       "endpoint": {
-        "uri": "arn:aws:lambda:eu-west-1::YOUR_LAMBDA_ARN"
+        "sourceDir": "lambda"
       }
     },
     "publishingInformation": {
-      "distributionCountries": [],
       "category": "SMART_HOME",
-      "isAvailableWorldwide": true,
+      "isAvailableWorldwide": false,
+      "distributionCountries": ["FR", "CA"],
+      "testingInstructions": "1. Dites: 'Alexa, ouvre mon jeedom'\n2. Testez le contrôle d'appareil: 'Allume la lumière'\n3. Testez un scénario: 'Active le scénario bonne nuit'\n4. Vérifiez les logs dans Jeedom",
       "locales": {
         "fr-FR": {
           "name": "mon jeedom",
-          "description": "Skill Ask for AlexaPremium",
+          "summary": "Contrôle de votre domotique Jeedom par la voix",
+          "description": "Mon Jeedom vous permet de contrôler tous vos équipements Jeedom avec Alexa.\n\nFonctionnalités:\n• Contrôle des appareils (lumières, volets, prises...)\n• Activation de scénarios\n• Consultation d'états et de capteurs\n• Réglage de valeurs (température, luminosité...)\n• Questions interactives\n\nPour utiliser cette skill, vous devez:\n1. Avoir un serveur Jeedom fonctionnel\n2. Installer le plugin AlexaPremium sur Jeedom\n3. Configurer votre clé API dans la skill\n\nDites simplement: 'Alexa, ouvre mon jeedom' pour commencer!",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
-            "Alexa, demande à mon jeedom d'allumer la lumière",
-            "Alexa, demande à mon jeedom la température"
+            "Alexa, demande à mon jeedom d'allumer la lumière du salon",
+            "Alexa, demande à mon jeedom quelle est la température"
           ],
-          "keywords": [],
-          "summary": "Contrôle de ma domotique Jeedom via AlexaPremium"
+          "keywords": [
+            "jeedom",
+            "domotique",
+            "maison connectée",
+            "smart home",
+            "automation"
+          ],
+          "smallIconUri": "file://assets/images/fr-FR_smallIconUri.png",
+          "largeIconUri": "file://assets/images/fr-FR_largeIconUri.png"
         },
         "fr-CA": {
           "name": "mon jeedom",
-          "description": "Skill Ask for AlexaPremium",
+          "summary": "Contrôle de votre domotique Jeedom par la voix",
+          "description": "Mon Jeedom vous permet de contrôler tous vos équipements Jeedom avec Alexa.\n\nFonctionnalités:\n• Contrôle des appareils (lumières, volets, prises...)\n• Activation de scénarios\n• Consultation d'états et de capteurs\n• Réglage de valeurs (température, luminosité...)\n• Questions interactives\n\nPour utiliser cette skill, vous devez:\n1. Avoir un serveur Jeedom fonctionnel\n2. Installer le plugin AlexaPremium sur Jeedom\n3. Configurer votre clé API dans la skill\n\nDites simplement: 'Alexa, ouvre mon jeedom' pour commencer!",
           "examplePhrases": [
             "Alexa, ouvre mon jeedom",
-            "Alexa, demande à mon jeedom d'allumer la lumière",
-            "Alexa, demande à mon jeedom la température"
+            "Alexa, demande à mon jeedom d'allumer la lumière du salon",
+            "Alexa, demande à mon jeedom quelle est la température"
           ],
-          "keywords": [],
-          "summary": "Contrôle de ma domotique Jeedom via AlexaPremium"
+          "keywords": [
+            "jeedom",
+            "domotique",
+            "maison connectée",
+            "smart home",
+            "automation"
+          ],
+          "smallIconUri": "file://assets/images/fr-CA_smallIconUri.png",
+          "largeIconUri": "file://assets/images/fr-CA_largeIconUri.png"
         }
-      },
-      "testingInstructions": "Alexa, ouvre mon jeedom."
+      }
     }
   }
 }
