@@ -50,7 +50,13 @@
       "isAvailableWorldwide": true,
       "locales": {
         "fr-FR": {
-          "name": "mon ackpy"
+          "name": "mon ackpy",
+          "description": "Skill Ask for AlexaPremium",
+          "examplePhrases": [
+            "Alexa, ouvre mon jeedom",
+            "Alexa, demande à mon jeedom d'allumer la lumière",
+            "Alexa, demande à mon jeedom la température"
+          ]
         },
         "fr-CA": {
           "name": "mon ackpy"
