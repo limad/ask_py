@@ -38,18 +38,6 @@
         "name": "alexa::devices:all:notifications:write"
       }
     ],
-    "events": {
-      "publications": [
-        {
-          "eventName": "AMAZON.MessageAlert.Activated"
-        }
-      ],
-      "subscriptions": [
-        {
-          "eventName": "SKILL_PROACTIVE_SUBSCRIPTION_CHANGED"
-        }
-      ]
-    },
     "publishingInformation": {
       "automaticClonedLocale": {
         "locales": [
