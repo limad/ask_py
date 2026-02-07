@@ -36,6 +36,9 @@
       },
       {
         "name": "alexa::devices:all:notifications:write"
+      },
+      {
+        "name": "alexa::async_event:write"
       }
     ],
     "publishingInformation": {
@@ -50,13 +53,13 @@
       "isAvailableWorldwide": true,
       "locales": {
         "fr-FR": {
-          "name": "ackpy"
+          "name": "mon ackpy"
         },
         "fr-CA": {
-          "name": "ackpy"
+          "name": "mon ackpy"
         }
       },
-      "testingInstructions": "Sample Testing Instructions."
+      "testingInstructions": "Alexa, ouvre mon jeedom.."
     }
   }
 }
