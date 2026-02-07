@@ -35,7 +35,7 @@
         "name": "alexa::alerts:timers:skill:readwrite"
       },
       {
-        "name": "alexa::devices:all:notifications:readwrite"
+        "name": "alexa::devices:all:notifications:write"
       }
     ],
     "publishingInformation": {
