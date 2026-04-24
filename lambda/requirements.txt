@@ -1,4 +1,4 @@
 ask-sdk-core==1.19.0
 ask-sdk-dynamodb-persistence-adapter==1.18.0
 requests==2.31.0
-boto3==1.34.0
+boto3==1.34.0isodate==0.6.1

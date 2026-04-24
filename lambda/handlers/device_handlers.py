@@ -5,7 +5,7 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.utils import is_intent_name, get_slot_value
 from ask_sdk_model import Response
 
-from lambda.utils.jeedom_client0 import JeedomClient
+from utils.jeedom_client import JeedomClient
 from utils.response_builder import ResponseBuilder
 from utils.jeedom_logger import JeedomLogger
 from config import ENABLE_DEVICE_CONTROL

@@ -4,7 +4,7 @@ from typing import Optional
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_model import Response
 
-from lambda.utils.jeedom_client0 import JeedomClient
+from utils.jeedom_client import JeedomClient
 from utils.response_builder import ResponseBuilder
 from utils.jeedom_logger import JeedomLogger
 

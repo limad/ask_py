@@ -11,7 +11,7 @@ from ask_sdk_core.utils import get_account_linking_access_token
 from schemas import QuestionState, QuestionStateError
 from config import (
     JEEDOM_URL,
-    TOKEN,
+    APIKEY,
     VERIFY_SSL,
     MAX_RETRIES,
     RETRY_DELAY,
@@ -20,9 +20,13 @@ from config import (
     QUESTION_URL,
     RESPONSE_URL,
     LOG_URL,
-    CODE_VERS,
-    CAN_POST_LOGS,
+    CODE_VERSION,
 )
+
+# Compat aliases pour le code existant
+TOKEN = APIKEY
+CODE_VERS = CODE_VERSION
+CAN_POST_LOGS = True
 import prompts
 
 logger = logging.getLogger(__name__)

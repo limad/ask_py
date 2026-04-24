@@ -8,7 +8,7 @@ from ask_sdk_core.utils import is_intent_name, get_slot_value, get_slot
 from ask_sdk_model import Response
 from ask_sdk_model.slu.entityresolution import StatusCode
 
-from lambda.utils.jeedom_client0 import JeedomClient
+from utils.jeedom_client import JeedomClient
 from utils.response_builder import ResponseBuilder
 from utils.jeedom_logger import JeedomLogger
 from const import (
